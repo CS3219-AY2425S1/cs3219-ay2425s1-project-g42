@@ -50,8 +50,12 @@ io.on("connection", (socket) => {
             if (matchedSocket) {
                 matchedSocket.emit("matchUpdate", { status: "match_found", userId: match.userId, partnerId: userId });
             }
+            
             await removeUser(userId, topic, difficulty);   
+            
         }
+        console.log("Keys in the Queue after match: ");
+        console.log(await redisClient.keys("*"));
     });
 
     socket.on("disconnect", async () => {
@@ -76,6 +80,10 @@ async function removeUser(userId, topic, difficulty) {
 }
 
 async function findMatch(userId, topic, difficulty) {
+    console.log("Keys in the Queue: ");
+    console.log(await redisClient.keys("*"));
+    console.log("Queue status for this topic: " + topic);
+    console.log(await redisClient.lRange(`${topic}`, 0, -1));
     const users = await redisClient.lRange(`${topic}`, 0, -1);
 
     for (const user of users) {
