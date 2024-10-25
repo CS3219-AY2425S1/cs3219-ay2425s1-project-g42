@@ -36,25 +36,22 @@ io.on("connection", (socket) => {
 
         await redisClient.rPush(`${topic}`, JSON.stringify({ userId, difficulty }));
 
-        const timeoutId = setTimeout(async () => {
+        socket.timeoutId = setTimeout(async () => {
             removeUser(userId, topic, difficulty)
             socket.emit("matchUpdate", { status: "timeout", message: "No match found within 30 seconds." });
             await redisClient.lRem(`${topic}`, 1, JSON.stringify({ userId, difficulty }));
-            console.log("Keys in the Queue after match: ");
-            console.log(await redisClient.keys("*"))
         }, 30000);
 
         const match = await findMatch(userId, topic, difficulty);
         if (match) {
-            clearTimeout(timeoutId); 
+            clearTimeout(socket.timeoutId); 
             socket.emit("matchUpdate", { status: "match_found", userId: userId, partnerId: match.userId }); 
             const matchedSocket = findSocketByUserId(match.userId);
             if (matchedSocket) {
+                clearTimeout(matchedSocket.timeoutId)
                 matchedSocket.emit("matchUpdate", { status: "match_found", userId: match.userId, partnerId: userId });
             }
             await removeUser(userId, topic, difficulty);   
-            console.log("Keys in the Queue after match: ");
-            console.log(await redisClient.keys("*"))
             
         }
         
@@ -84,10 +81,6 @@ async function removeUser(userId, topic, difficulty) {
 }
 
 async function findMatch(userId, topic, difficulty) {
-    console.log("Keys in the Queue: ");
-    console.log(await redisClient.keys("*"));
-    console.log("Queue status for this topic: " + topic);
-    console.log(await redisClient.lRange(`${topic}`, 0, -1));
     const users = await redisClient.lRange(`${topic}`, 0, -1);
 
     for (const user of users) {
