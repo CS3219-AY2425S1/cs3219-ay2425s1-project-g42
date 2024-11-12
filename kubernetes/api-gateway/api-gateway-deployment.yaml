@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: asia-southeast1-docker.pkg.dev/peerprep-440702/peerprep/gateway:latest
+          image: asia-southeast1-docker.pkg.dev/peerprep-440702/peerprep/gateway:${IMAGE_VERSION}
           ports:
             - name: api-gateway
               containerPort: 80

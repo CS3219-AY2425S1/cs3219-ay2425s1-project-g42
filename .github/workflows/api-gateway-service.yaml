@@ -13,6 +13,7 @@ env:
   GKE_CLUSTER: peerprep-cluster-1
   GKE_ZONE: asia-southeast1
   REPOSITORY_NAME: peerprep
+  IMAGE_VERSION: ${GITHUB_SHA}
   SERVICE: api-gateway
   IMAGE: gateway
 
@@ -52,18 +53,15 @@ jobs:
     # Build the Docker image
     - name: 'Build and push Docker container'
       run: |-
-        DOCKER_TAG="${GKE_ZONE}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY_NAME}/${IMAGE}:${GITHUB_SHA}"
-        DOCKER_TAG_LATEST="${GKE_ZONE}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY_NAME}/${IMAGE}:latest"
+        DOCKER_TAG="${GKE_ZONE}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY_NAME}/${IMAGE}:${IMAGE_VERSION}"
 
         docker build \
           --tag "${DOCKER_TAG}" \
-          --tag "${DOCKER_TAG_LATEST}" \
           --build-arg GITHUB_SHA="${GITHUB_SHA}" \
           --build-arg GITHUB_REF="${GITHUB_REF}" \
           ./${SERVICE}
 
         docker push "${DOCKER_TAG}"
-        docker push "${DOCKER_TAG_LATEST}"
 
     # Deploy the Docker image to the GKE cluster
     - name: Deploy
